@@ -1,0 +1,13 @@
+<resources>
+    <style name="Theme.Utsavas" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/utsavas_primary</item>
+        <item name="colorOnPrimary">@color/utsavas_on_primary</item>
+        <item name="colorSecondary">@color/utsavas_accent</item>
+        <item name="colorSurface">@color/utsavas_surface</item>
+        <item name="colorOnSurface">@color/utsavas_text</item>
+        <item name="android:statusBarColor">@color/utsavas_primary_dark</item>
+        <item name="android:navigationBarColor">@color/utsavas_surface</item>
+        <item name="android:windowBackground">@color/utsavas_surface</item>
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+</resources>

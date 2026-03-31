@@ -1,0 +1,12 @@
+<resources>
+    <color name="utsavas_primary">#3F6FB6</color>
+    <color name="utsavas_primary_dark">#315E9E</color>
+    <color name="utsavas_accent">#5F95DA</color>
+    <color name="utsavas_surface">#FBF5EA</color>
+    <color name="utsavas_surface_dark">#F4ECDF</color>
+    <color name="utsavas_text">#30402F</color>
+    <color name="utsavas_text_dark">#30402F</color>
+    <color name="utsavas_on_primary">#FFFFFF</color>
+    <color name="utsavas_on_accent">#FFFFFF</color>
+    <color name="ic_launcher_background">#F4ECDF</color>
+</resources>
