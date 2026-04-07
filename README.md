@@ -6,16 +6,17 @@ This folder contains a native Android wrapper for the UTSAVAS web app.
 
 - App name: `UTSAVAS`
 - Package name: `com.talme.utsavas`
-- Release web URL: `https://utsavas.com`
+- Release web URL: `https://www.utsavas.com`
 - Debug web URL: configurable for local or staging builds
 - Play-ready target SDK: `35`
 - Features included:
   - WebView loading for the main Utsavas site
-  - Back button navigation inside the WebView
+  - Native bottom navigation for back, forward, home, refresh, and share
   - Pull to refresh
   - Offline fallback screen with retry
   - External app/browser opening for links like phone, email, maps, social media, and app intents
   - File upload support for HTML file inputs
+  - JavaScript `alert`, `confirm`, and `prompt` dialogs
   - Runtime location permission bridge for website geolocation
   - Launcher and splash assets generated from the existing website logo
 
@@ -58,7 +59,7 @@ The Android app is a WebView wrapper, so deployed frontend and backend changes a
 
 If you want Android debug builds to point at your latest local web changes too, set one of these in `local.properties` or as an environment variable before opening the project in Android Studio:
 
-- `UTSAVAS_WEB_URL=https://utsavas.com`
+- `UTSAVAS_WEB_URL=https://www.utsavas.com`
 - `UTSAVAS_DEBUG_WEB_URL=http://10.0.2.2:3000`
 
 Notes:

@@ -2,6 +2,7 @@ package com.talme.utsavas
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -10,14 +11,18 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.InputType
 import android.webkit.CookieManager
 import android.webkit.GeolocationPermissions
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.JsPromptResult
+import android.webkit.JsResult
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -115,6 +120,11 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.getColor(this, R.color.utsavas_primary),
             ContextCompat.getColor(this, R.color.utsavas_accent),
         )
+        binding.actionBack.setOnClickListener { goBack() }
+        binding.actionForward.setOnClickListener { goForward() }
+        binding.actionHome.setOnClickListener { goHome() }
+        binding.actionRefresh.setOnClickListener { refreshCurrentPage() }
+        binding.actionShare.setOnClickListener { shareCurrentPage() }
         binding.retryButton.setOnClickListener {
             loadHome()
         }
@@ -139,6 +149,7 @@ class MainActivity : AppCompatActivity() {
                 override fun handleOnBackPressed() {
                     if (binding.webView.canGoBack()) {
                         binding.webView.goBack()
+                        updateNavigationControls()
                     } else {
                         isEnabled = false
                         onBackPressedDispatcher.onBackPressed()
@@ -189,6 +200,7 @@ class MainActivity : AppCompatActivity() {
                 override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                     binding.offlineContainer.isVisible = false
                     binding.loadingBar.isVisible = true
+                    updateNavigationControls()
                 }
 
                 override fun onPageFinished(view: WebView?, url: String?) {
@@ -196,6 +208,7 @@ class MainActivity : AppCompatActivity() {
                     if (binding.loadingBar.progress >= 100) {
                         binding.loadingBar.isVisible = false
                     }
+                    updateNavigationControls()
                 }
 
                 override fun onReceivedError(
@@ -213,6 +226,7 @@ class MainActivity : AppCompatActivity() {
             object : WebChromeClient() {
                 override fun onProgressChanged(view: WebView?, newProgress: Int) {
                     updateLoadingProgress(newProgress)
+                    updateNavigationControls()
                 }
 
                 override fun onShowFileChooser(
@@ -270,6 +284,41 @@ class MainActivity : AppCompatActivity() {
                     view.post { handlePopupNavigation(targetUrl) }
                     return false
                 }
+
+                override fun onJsAlert(
+                    view: WebView?,
+                    url: String?,
+                    message: String?,
+                    result: JsResult?,
+                ): Boolean {
+                    showJavascriptAlert(message.orEmpty(), result)
+                    return true
+                }
+
+                override fun onJsConfirm(
+                    view: WebView?,
+                    url: String?,
+                    message: String?,
+                    result: JsResult?,
+                ): Boolean {
+                    showJavascriptConfirm(message.orEmpty(), result)
+                    return true
+                }
+
+                override fun onJsPrompt(
+                    view: WebView?,
+                    url: String?,
+                    message: String?,
+                    defaultValue: String?,
+                    result: JsPromptResult?,
+                ): Boolean {
+                    showJavascriptPrompt(
+                        message = message.orEmpty(),
+                        defaultValue = defaultValue.orEmpty(),
+                        result = result,
+                    )
+                    return true
+                }
             }
 
         binding.webView.setDownloadListener { url, _, _, _, _ ->
@@ -287,12 +336,14 @@ class MainActivity : AppCompatActivity() {
 
         binding.offlineContainer.isVisible = false
         binding.webView.loadUrl(BuildConfig.WEB_URL)
+        updateNavigationControls()
     }
 
     private fun showOfflineState() {
         binding.swipeRefresh.isRefreshing = false
         binding.loadingBar.isVisible = false
         binding.offlineContainer.isVisible = true
+        updateNavigationControls()
     }
 
     private fun updateLoadingProgress(progress: Int) {
@@ -301,6 +352,12 @@ class MainActivity : AppCompatActivity() {
         if (progress >= 100) {
             binding.loadingBar.isVisible = false
         }
+    }
+
+    private fun updateNavigationControls() {
+        binding.actionBack.isEnabled = binding.webView.canGoBack()
+        binding.actionForward.isEnabled = binding.webView.canGoForward()
+        binding.actionShare.isEnabled = binding.webView.url != null
     }
 
     private fun handleNavigation(uri: Uri): Boolean {
@@ -394,6 +451,94 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun shareCurrentPage() {
+        val url = binding.webView.url ?: return
+        val shareIntent =
+            Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, url)
+            }
+
+        try {
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.share_chooser_title)))
+        } catch (_: ActivityNotFoundException) {
+            toast(R.string.open_external_error)
+        }
+    }
+
+    private fun showJavascriptAlert(
+        message: String,
+        result: JsResult?,
+    ) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.app_name)
+            .setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton(R.string.js_dialog_positive) { dialog, _ ->
+                result?.confirm()
+                dialog.dismiss()
+            }
+            .setOnCancelListener {
+                result?.cancel()
+            }
+            .show()
+    }
+
+    private fun showJavascriptConfirm(
+        message: String,
+        result: JsResult?,
+    ) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.app_name)
+            .setMessage(message)
+            .setPositiveButton(R.string.js_dialog_positive) { dialog, _ ->
+                result?.confirm()
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.js_dialog_negative) { dialog, _ ->
+                result?.cancel()
+                dialog.dismiss()
+            }
+            .setOnCancelListener {
+                result?.cancel()
+            }
+            .show()
+    }
+
+    private fun showJavascriptPrompt(
+        message: String,
+        defaultValue: String,
+        result: JsPromptResult?,
+    ) {
+        val input =
+            EditText(this).apply {
+                setText(defaultValue)
+                inputType = InputType.TYPE_CLASS_TEXT
+                setSingleLine()
+            }
+
+        val horizontalPadding = resources.displayMetrics.density.times(24).toInt()
+        val verticalPadding = resources.displayMetrics.density.times(12).toInt()
+        input.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.app_name)
+            .setMessage(message)
+            .setView(input)
+            .setPositiveButton(R.string.js_dialog_positive) { dialog, _ ->
+                result?.confirm(input.text?.toString().orEmpty())
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.js_dialog_negative) { dialog, _ ->
+                result?.cancel()
+                dialog.dismiss()
+            }
+            .setOnCancelListener {
+                result?.cancel()
+            }
+            .show()
+    }
+
     private fun handleGeolocationPrompt(
         origin: String,
         callback: GeolocationPermissions.Callback,
@@ -446,5 +591,38 @@ class MainActivity : AppCompatActivity() {
 
     private fun toast(messageResId: Int) {
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun refreshCurrentPage() {
+        if (!hasNetworkConnection()) {
+            showOfflineState()
+            return
+        }
+
+        binding.offlineContainer.isVisible = false
+        if (binding.webView.url.isNullOrBlank()) {
+            loadHome()
+        } else {
+            binding.webView.reload()
+        }
+        updateNavigationControls()
+    }
+
+    private fun goHome() {
+        loadHome()
+    }
+
+    private fun goForward() {
+        if (binding.webView.canGoForward()) {
+            binding.webView.goForward()
+        }
+        updateNavigationControls()
+    }
+
+    private fun goBack() {
+        if (binding.webView.canGoBack()) {
+            binding.webView.goBack()
+        }
+        updateNavigationControls()
     }
 }

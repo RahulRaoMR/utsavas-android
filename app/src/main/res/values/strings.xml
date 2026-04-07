@@ -3,7 +3,15 @@
     <string name="offline_title">Couldn\'t load UTSAVAS</string>
     <string name="offline_message">Check your internet connection or try again in a moment.</string>
     <string name="retry">Retry</string>
+    <string name="nav_back">Back</string>
+    <string name="nav_forward">Forward</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_refresh">Refresh</string>
+    <string name="nav_share">Share</string>
+    <string name="share_chooser_title">Share UTSAVAS link</string>
     <string name="open_external_error">Couldn\'t open that link on this device.</string>
     <string name="file_picker_unavailable">Couldn\'t open the file picker.</string>
     <string name="location_permission_denied">Location access was denied.</string>
+    <string name="js_dialog_positive">OK</string>
+    <string name="js_dialog_negative">Cancel</string>
 </resources>
